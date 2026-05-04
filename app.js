@@ -67,6 +67,10 @@ const logStream = document.querySelector("[data-log-stream]");
 const latencySparkline = document.querySelector("[data-latency-sparkline]");
 const trafficCount = document.querySelector("[data-traffic-count]");
 const trafficType = document.querySelector("[data-traffic-type]");
+const trafficSelect = document.querySelector("[data-traffic-select]");
+const trafficSelectButton = document.querySelector("[data-traffic-select-button]");
+const trafficSelectLabel = document.querySelector("[data-traffic-select-label]");
+const trafficOptions = document.querySelectorAll("[data-traffic-option]");
 const trafficButton = document.querySelector("[data-generate-traffic]");
 const trafficResult = document.querySelector("[data-traffic-result]");
 const incidentFeed = document.querySelector("[data-incident-feed]");
@@ -108,7 +112,7 @@ function renderRequestChart(values) {
   const max = Math.max(...source, 1);
   const bars = source.slice(-18).map((value) => Math.max(8, Math.round((value / max) * 100)));
 
-  requestChart.innerHTML = bars.map((height) => `<span style="height:${height}%"></span>`).join("");
+  requestChart.innerHTML = bars.map((height, index) => `<span style="height:${height}%" title="Sample ${index + 1}: ${height}%"></span>`).join("");
 }
 
 function renderSparkline(latency) {
@@ -196,6 +200,20 @@ function openMobileMenu() {
 function closeMobileMenu() {
   document.body.classList.remove("menu-open");
   openMenu.setAttribute("aria-expanded", "false");
+}
+
+function closeTrafficSelect() {
+  trafficSelect.classList.remove("open");
+  trafficSelectButton.setAttribute("aria-expanded", "false");
+}
+
+function setTrafficType(value, label) {
+  trafficType.value = value;
+  trafficSelectLabel.textContent = label;
+  trafficOptions.forEach((option) => {
+    option.setAttribute("aria-selected", String(option.value === value));
+  });
+  closeTrafficSelect();
 }
 
 async function prometheusQuery(query) {
@@ -303,6 +321,20 @@ openMenu.addEventListener("click", openMobileMenu);
 closeMenu.addEventListener("click", closeMobileMenu);
 overlay.addEventListener("click", closeMobileMenu);
 refreshButtons.forEach((button) => button.addEventListener("click", loadLiveData));
+trafficSelectButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  const open = trafficSelect.classList.toggle("open");
+  trafficSelectButton.setAttribute("aria-expanded", String(open));
+});
+trafficOptions.forEach((option) => {
+  option.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setTrafficType(option.value, option.textContent.trim());
+  });
+});
+document.addEventListener("click", (event) => {
+  if (!trafficSelect.contains(event.target)) closeTrafficSelect();
+});
 trafficButton.addEventListener("click", generateTraffic);
 window.addEventListener("resize", () => {
   if (window.innerWidth > 820) closeMobileMenu();

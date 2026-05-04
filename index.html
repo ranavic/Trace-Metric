@@ -64,18 +64,33 @@
             </p>
           </div>
           <div class="traffic-card">
+            <div class="traffic-card-head">
+              <span>Traffic simulator</span>
+              <strong>Demo signals</strong>
+            </div>
             <label>
               Traffic amount
               <input type="number" min="1" max="500" value="80" data-traffic-count />
             </label>
             <label>
               Traffic type
-              <select data-traffic-type>
+              <select class="native-select" data-traffic-type aria-hidden="true" tabindex="-1">
                 <option value="mixed">Mixed traffic</option>
                 <option value="healthy">Healthy only</option>
                 <option value="slow">Slow latency</option>
                 <option value="fail">Failures</option>
               </select>
+              <div class="traffic-select" data-traffic-select>
+                <button class="traffic-select-button" type="button" aria-haspopup="listbox" aria-expanded="false" data-traffic-select-button>
+                  <span data-traffic-select-label>Mixed traffic</span>
+                </button>
+                <div class="traffic-options" role="listbox" data-traffic-options>
+                  <button type="button" role="option" aria-selected="true" data-traffic-option value="mixed">Mixed traffic</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="healthy">Healthy only</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="slow">Slow latency</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="fail">Failures</button>
+                </div>
+              </div>
             </label>
             <button type="button" data-generate-traffic>Generate traffic</button>
             <p data-traffic-result>Choose an amount and type, then generate real backend signals.</p>
@@ -220,7 +235,26 @@
               <h2>Native request chart</h2>
               <span>Generated inside Trace & Metrics</span>
             </div>
-            <div class="request-chart" data-request-chart></div>
+            <div class="chart-frame">
+              <div class="chart-scale" aria-hidden="true">
+                <span>High</span>
+                <span>Mid</span>
+                <span>Low</span>
+              </div>
+              <div>
+                <div class="request-chart" data-request-chart></div>
+                <div class="chart-axis" aria-hidden="true">
+                  <span>15m ago</span>
+                  <span>Request rate samples</span>
+                  <span>Now</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-legend" aria-label="Chart legend">
+              <span><i class="legend-live"></i>Live sample</span>
+              <span><i class="legend-slow"></i>Slow traffic</span>
+              <span><i class="legend-ok"></i>Healthy traffic</span>
+            </div>
           </div>
           <pre class="query-box compact-query"><code>sum(rate(http_requests_total[1m])) by (service)
 histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m])))</code></pre>

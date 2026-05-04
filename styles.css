@@ -74,6 +74,7 @@ button {
 }
 
 .collapse-button {
+  display: none;
   width: 38px;
   height: 38px;
   border: 0;
@@ -263,19 +264,63 @@ p {
 }
 
 .traffic-card {
+  position: relative;
+  overflow: hidden;
   width: min(360px, 100%);
   display: grid;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #d8ccbb;
+  gap: 14px;
+  padding: 18px;
+  border: 2px solid rgba(17, 17, 17, 0.92);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.32);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(237, 166, 207, 0.72) 0 42px, transparent 44px),
+    linear-gradient(135deg, var(--yellow), #f7e790 58%, #f9edcb);
+  box-shadow: 0 14px 0 rgba(17, 17, 17, 0.06);
+}
+
+.traffic-card::after {
+  content: "";
+  position: absolute;
+  right: -24px;
+  bottom: -32px;
+  width: 118px;
+  height: 118px;
+  border-radius: 30px;
+  background: rgba(17, 17, 17, 0.08);
+  transform: rotate(-14deg);
+}
+
+.traffic-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.traffic-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.traffic-card-head span {
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.traffic-card-head strong {
+  padding: 7px 10px;
+  border-radius: 15px;
+  background: #111;
+  color: #fff8ea;
+  font-size: 12px;
 }
 
 .traffic-card label {
   display: grid;
   gap: 6px;
-  color: var(--muted);
+  color: rgba(0, 0, 0, 0.62);
   font-size: 11px;
   font-weight: 850;
   text-transform: uppercase;
@@ -285,23 +330,125 @@ p {
 .traffic-card select {
   width: 100%;
   height: 40px;
-  border: 1px solid #d8ccbb;
-  border-radius: 16px;
-  background: #fff8ea;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 248, 234, 0.78);
   color: #111;
   padding: 0 12px;
 }
 
-.traffic-card button {
+.native-select {
+  display: none;
+}
+
+.traffic-select {
+  position: relative;
+}
+
+.traffic-select-button {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 248, 234, 0.78);
+  color: #111;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.traffic-select-button::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #111;
+  border-bottom: 2px solid #111;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.traffic-select-button:focus-visible {
+  outline: 0;
+}
+
+.traffic-select.open .traffic-select-button,
+.traffic-select-button:focus-visible {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(237, 166, 207, 0.46);
+}
+
+.traffic-options {
+  position: static;
+  z-index: 5;
+  display: none;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 2px solid #111;
+  border-radius: 16px;
+  background: #fff8ea;
+  box-shadow: inset 0 0 0 3px rgba(237, 166, 207, 0.18);
+}
+
+.traffic-select.open .traffic-options {
+  display: grid;
+}
+
+.traffic-options button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #111;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.traffic-options button:hover,
+.traffic-options button[aria-selected="true"] {
+  background: rgba(237, 166, 207, 0.55);
+  font-weight: 800;
+}
+
+.traffic-card > button {
   height: 42px;
   border: 0;
-  border-radius: 20px;
+  border-radius: 16px;
   background: #111;
   color: white;
+  font-weight: 800;
+}
+
+.traffic-card .traffic-select-button {
+  height: 40px;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 248, 234, 0.78);
+  color: #111;
+  font-weight: 400;
+}
+
+.traffic-card .traffic-options button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #111;
+  padding: 0 10px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.traffic-card .traffic-options button:hover,
+.traffic-card .traffic-options button[aria-selected="true"] {
+  background: rgba(237, 166, 207, 0.55);
+  font-weight: 850;
 }
 
 .traffic-card p {
   margin: 0;
+  color: rgba(0, 0, 0, 0.62);
   font-size: 12px;
 }
 
@@ -413,7 +560,7 @@ small {
 }
 
 .native-data-panel {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .native-data-grid {
@@ -429,7 +576,20 @@ small {
   min-height: 86px;
   padding: 16px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 248, 234, 0.46);
+}
+
+.native-data-grid div:nth-child(2) {
+  background: rgba(237, 166, 207, 0.28);
+}
+
+.native-data-grid div:nth-child(3) {
+  background: rgba(156, 173, 98, 0.26);
+}
+
+.native-data-grid div:nth-child(4) {
+  background: rgba(169, 192, 227, 0.3);
 }
 
 .native-data-grid span,
@@ -453,9 +613,45 @@ small {
 }
 
 .native-chart-card {
+  position: relative;
+  overflow: hidden;
   padding: 24px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(169, 192, 227, 0.58);
+}
+
+.native-chart-card::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: -34px;
+  width: 138px;
+  height: 138px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.24);
+  transform: rotate(18deg);
+}
+
+.native-chart-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.chart-frame {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.chart-scale {
+  display: grid;
+  align-content: space-between;
+  padding: 18px 0 30px;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
 .request-chart {
@@ -464,15 +660,60 @@ small {
   align-items: end;
   gap: 8px;
   min-height: 220px;
-  margin-top: 22px;
   padding: 20px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.36);
+  border: 2px solid rgba(17, 17, 17, 0.88);
+  border-radius: 16px;
+  background:
+    linear-gradient(to top, rgba(17, 17, 17, 0.1) 1px, transparent 1px) 0 0 / 100% 25%,
+    rgba(255, 248, 234, 0.34);
+}
+
+.chart-axis,
+.chart-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.chart-axis {
+  padding: 9px 4px 0;
+}
+
+.chart-legend {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chart-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #111;
+}
+
+.chart-legend .legend-slow {
+  background: var(--pink);
+}
+
+.chart-legend .legend-ok {
+  background: var(--green);
 }
 
 .request-chart span {
   min-height: 8px;
-  border-radius: 12px 12px 4px 4px;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 10px 10px 3px 3px;
   background: #111;
 }
 
@@ -502,12 +743,25 @@ small {
   align-items: start;
   padding: 14px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.36);
+  background: rgba(244, 216, 91, 0.74);
+}
+
+.timeline-row:nth-child(2) {
+  background: rgba(237, 166, 207, 0.56);
+}
+
+.timeline-row:nth-child(3) {
+  background: rgba(169, 192, 227, 0.6);
 }
 
 .timeline-row time {
-  color: var(--muted);
+  width: fit-content;
+  padding: 7px 9px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.42);
+  color: #111;
   font-size: 12px;
+  font-weight: 850;
 }
 
 .timeline-row div {
@@ -516,24 +770,54 @@ small {
 }
 
 .timeline-row span {
-  color: var(--muted);
+  color: rgba(0, 0, 0, 0.62);
   font-size: 13px;
+}
+
+.pink-panel {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(17, 17, 17, 0.08) 0 54px, transparent 56px),
+    rgba(237, 166, 207, 0.72);
+}
+
+.pink-panel .section-title code {
+  background: #111;
+  color: #fff8ea;
 }
 
 .incident-list {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   margin: 24px 0 0;
   font-size: 13px;
 }
 
 dt {
-  color: rgba(0, 0, 0, 0.55);
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.42);
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
 dd {
   margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 248, 234, 0.4);
+  color: #111;
+}
+
+.incident-list dd:nth-of-type(2) {
+  background: rgba(255, 248, 234, 0.48);
+}
+
+.incident-list dd:nth-of-type(3) {
+  background: rgba(255, 248, 234, 0.48);
 }
 
 code {
@@ -904,6 +1188,10 @@ code {
     width: min(310px, calc(100vw - 24px));
     transform: translateX(calc(-100% - 18px));
     transition: transform 180ms ease;
+  }
+
+  .collapse-button {
+    display: block;
   }
 
   body.menu-open .sidebar {
