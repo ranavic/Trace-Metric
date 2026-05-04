@@ -20,9 +20,9 @@ const viewCopy = {
     description: "Review the rules that turn bad metrics into actionable alerts.",
   },
   tracing: {
-    eyebrow: "Jaeger add-on",
+    eyebrow: "OpenTelemetry + Jaeger",
     title: "Distributed tracing path",
-    description: "Jaeger is ready for tracing; the next backend upgrade is OpenTelemetry spans from checkout-api.",
+    description: "Follow generated checkout-api requests from OpenTelemetry spans into Jaeger's trace view.",
   },
   services: {
     eyebrow: "Runtime inventory",
@@ -65,6 +65,7 @@ const requestChart = document.querySelector("[data-request-chart]");
 const alertFeed = document.querySelector("[data-alert-feed]");
 const logStream = document.querySelector("[data-log-stream]");
 const latencySparkline = document.querySelector("[data-latency-sparkline]");
+const latencyChartLabel = document.querySelector("[data-latency-chart-label]");
 const trafficCount = document.querySelector("[data-traffic-count]");
 const trafficType = document.querySelector("[data-traffic-type]");
 const trafficSelect = document.querySelector("[data-traffic-select]");
@@ -74,6 +75,7 @@ const trafficOptions = document.querySelectorAll("[data-traffic-option]");
 const trafficButton = document.querySelector("[data-generate-traffic]");
 const trafficResult = document.querySelector("[data-traffic-result]");
 const incidentFeed = document.querySelector("[data-incident-feed]");
+const traceStatus = document.querySelector("[data-trace-status]");
 
 const setText = (selector, value) => {
   document.querySelectorAll(selector).forEach((element) => {
@@ -136,7 +138,7 @@ function renderAlerts(alerts) {
       const name = alert.labels?.alertname || "Unknown alert";
       const severity = alert.labels?.severity || "unknown";
       const summary = alert.annotations?.summary || "Alert from Alertmanager";
-      return `<div class="alert-feed-row"><div><strong>${name}</strong><br><span>${summary}</span></div><strong>${severity}</strong></div>`;
+      return `<div class="alert-feed-row"><div><strong>${escapeHtml(name)}</strong><br><span>${escapeHtml(summary)}</span></div><strong>${escapeHtml(severity)}</strong></div>`;
     })
     .join("");
 }
@@ -242,17 +244,17 @@ async function loadLiveData() {
   try {
     stackStatus.textContent = "Stack online";
 
-    const totals = await prometheusQuery("http_requests_total");
-    const rate = await prometheusQuery("sum(rate(http_requests_total[1m])) by (service)");
-    const p95 = await prometheusQuery("histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m])))");
-    const range = await prometheusRange("sum(rate(http_requests_total[1m])) by (service)");
-    const alertsResponse = await fetch("http://localhost:9093/api/v2/alerts");
-    const alerts = await alertsResponse.json();
-    const [logSummary, incidents, serviceHealth] = await Promise.all([
+    const [totals, rate, p95, range, alertsResponse, logSummary, incidents, serviceHealth] = await Promise.all([
+      prometheusQuery("http_requests_total"),
+      prometheusQuery("sum(rate(http_requests_total[1m])) by (service)"),
+      prometheusQuery("histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m])))"),
+      prometheusRange("sum(rate(http_requests_total[1m])) by (service)"),
+      fetch("http://localhost:9093/api/v2/alerts"),
       serviceJson("/api/log-summary"),
       serviceJson("/api/incidents"),
       serviceJson("/api/service-health"),
     ]);
+    const alerts = await alertsResponse.json();
 
     const okCount = totals
       .filter((item) => item.metric.status === "200")
@@ -269,6 +271,7 @@ async function loadLiveData() {
     setText("[data-error-count], [data-error-count-copy]", formatNumber(errorCount));
     setText("[data-request-rate]", formatRate(requestRate));
     setText("[data-p95-latency], [data-p95-latency-copy]", formatLatency(latency));
+    latencyChartLabel.textContent = `current ${formatLatency(latency)}`;
     setText("[data-alert-count]", formatNumber(alerts.length));
     setText("[data-target-health]", "up");
     setText("[data-log-total], [data-log-total-copy]", formatNumber(logSummary.total));
@@ -276,6 +279,9 @@ async function loadLiveData() {
     setText("[data-log-slow]", formatNumber(logSummary.slow));
     setText("[data-service-status]", serviceHealth.status === "up" ? "Running" : "Check");
     setText("[data-service-signals]", serviceHealth.tracing ? "Metrics + logs + traces" : "Metrics + logs");
+    traceStatus.textContent = serviceHealth.tracing
+      ? "Every generated request creates an OpenTelemetry span and exports it to Jaeger through OTLP HTTP."
+      : "Metrics and logs are live, but OTLP tracing is not configured for checkout-api.";
 
     const alertNames = alerts.map((alert) => alert.labels?.alertname);
     setText("[data-latency-alert-state]", alertNames.includes("HighLatencyP95") ? "Active or firing" : "Quiet");

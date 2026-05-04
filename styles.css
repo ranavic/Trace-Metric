@@ -130,6 +130,30 @@ button {
   color: #cbc5ba;
 }
 
+.sidebar {
+  scrollbar-color: var(--pink) rgba(255, 255, 255, 0.1);
+  scrollbar-width: thin;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border: 2px solid #111;
+  border-radius: 999px;
+  background: var(--pink);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #f4d85b;
+}
+
 .overlay {
   display: none;
 }
@@ -555,8 +579,53 @@ small {
   opacity: 0.2;
 }
 
+.line-chart .chart-threshold {
+  stroke: #111;
+  stroke-dasharray: 5 7;
+  stroke-width: 2;
+  opacity: 0.34;
+}
+
 .line-chart circle {
   fill: #111;
+}
+
+.chart-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin-top: 4px;
+  color: rgba(17, 17, 17, 0.64);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.chart-keys span,
+.chart-keys strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.chart-keys strong {
+  margin-left: auto;
+  color: #111;
+}
+
+.chart-keys i {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  background: #111;
+}
+
+.chart-keys .threshold-key {
+  height: 0;
+  border-top: 2px dashed rgba(17, 17, 17, 0.5);
+  background: transparent;
 }
 
 .native-data-panel {
@@ -1186,6 +1255,11 @@ code {
     z-index: 30;
     inset: 12px auto 12px 12px;
     width: min(310px, calc(100vw - 24px));
+    min-height: 0;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     transform: translateX(calc(-100% - 18px));
     transition: transform 180ms ease;
   }

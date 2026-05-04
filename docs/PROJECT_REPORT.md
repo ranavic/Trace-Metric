@@ -10,32 +10,41 @@ Modern applications can fail silently when teams lack centralized visibility int
 - Metrics monitoring with Prometheus.
 - Dashboards with Grafana.
 - Alerting with Alertmanager.
+- Distributed tracing with OpenTelemetry and Jaeger.
 - Unified custom webapp for an observability overview.
+- Native traffic simulation for healthy, slow, failing, and mixed traffic.
+- Reliability explanation with SLO and error budget views.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
   Browser[User browser] --> UI[Custom webapp]
+  UI --> Simulate[/Traffic simulator/]
+  Simulate --> Sample
 
   Sample[Sample Node service] --> Metrics[/metrics]
-  Prometheus --> Metrics
+  Prometheus -->|scrapes| Metrics
   Grafana --> Prometheus
   Prometheus --> Alertmanager
 
-  Sample --> Logstash
+  Sample -->|JSON logs| Logstash
   Logstash --> Elasticsearch
   Kibana --> Elasticsearch
 
-  Jaeger[Jaeger tracing UI]
+  Sample -->|OpenTelemetry OTLP HTTP| Jaeger[Jaeger all-in-one]
+  UI --> Prometheus
+  UI --> Alertmanager
+  UI --> Elasticsearch
+  UI --> Jaeger
 ```
 
 ## Components
 
 | Component | Role |
 | --- | --- |
-| Custom webapp | Polished operational dashboard and learning interface |
-| Sample service | Demo application that emits metrics and logs |
+| Custom webapp | Polished operational dashboard, traffic generator, and learning interface |
+| Sample service | Demo `checkout-api` application that emits metrics, logs, incidents, and traces |
 | Prometheus | Scrapes and stores metrics |
 | Grafana | Visualizes Prometheus metrics |
 | Alertmanager | Receives and groups alerts |
@@ -43,6 +52,25 @@ flowchart LR
 | Elasticsearch | Stores log data |
 | Kibana | Searches and visualizes logs |
 | Jaeger | Distributed tracing UI receiving OpenTelemetry spans |
+
+## Custom Webapp Features
+
+The frontend is implemented as a responsive single-page dashboard with working tabs for:
+
+- Overview
+- Live metrics
+- Logs
+- Alerts
+- Tracing
+- Services
+- SLO
+- Deployments
+- Runbook
+- Architecture
+
+The webapp includes a native traffic generator with request amount and traffic type controls. Supported traffic types are `Mixed traffic`, `Healthy only`, `Slow latency`, and `Failures`.
+
+The frontend imports live data from Prometheus, Alertmanager, Elasticsearch-backed service APIs, and the sample service health API. It renders native status cards, request charts, log rows, active alerts, incident history, tracing status, and service signal status.
 
 ## Alert Demonstration
 
@@ -53,6 +81,30 @@ In the verified run, `HighLatencyP95` reached firing state and appeared as an ac
 ## Log Demonstration
 
 The sample service sent JSON logs to Logstash. Logstash wrote them into Elasticsearch under `app-logs-*`, and Kibana Discover displayed the indexed documents.
+
+Each backend request writes one JSON log line containing fields such as `service`, `status`, `path`, `mode`, `duration_ms`, and `timestamp`. The Docker Compose setup does not define a persistent Elasticsearch volume, so logs are suitable for local demo sessions rather than long-term retention.
+
+## Tracing Demonstration
+
+The sample service uses OpenTelemetry packages inside the Node app. Each request creates a span named for the route, such as `HTTP /slow`, `HTTP /fail`, or `HTTP /health`.
+
+The service exports spans to Jaeger through OTLP HTTP using:
+
+```text
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+```
+
+Jaeger displays traces for the `checkout-api` service at `http://localhost:16686`.
+
+## SLO And Error Budget Demonstration
+
+The SLO tab explains the reliability targets used by the demo:
+
+- `99.9%` availability target
+- `500 ms` p95 latency limit
+- `< 1%` 5xx target
+
+These targets connect user-facing reliability expectations to backend measurements. The alert rules demonstrate what happens when latency or error rate starts burning the error budget.
 
 ## Free Stack
 
@@ -67,14 +119,7 @@ All project components are free to run locally:
 - Jaeger all-in-one
 - Node.js sample service
 
-## Future Improvements
-
-- Add Filebeat for container log collection.
-- Add Kubernetes manifests.
-- Add CI checks for Docker Compose config and dashboard JSON.
-- Add more Grafana dashboard panels.
-
-## Completed Advanced Improvements
+## Completed Implementation
 
 - Native frontend traffic generator with request amount and traffic type controls.
 - Real log summary cards powered by Elasticsearch.
@@ -82,3 +127,6 @@ All project components are free to run locally:
 - Native frontend chart rendered from Prometheus range data.
 - Service health display from the sample service API.
 - OpenTelemetry tracing from `checkout-api` to Jaeger.
+- Responsive navigation with desktop sidebar and mobile burger menu.
+- Overview, metrics, logs, alerts, tracing, services, SLO, deployments, runbook, and architecture tabs.
+- Project PDF guides under `docs/` for separate tool access and full observability workflow.
