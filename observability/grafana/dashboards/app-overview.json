@@ -20,7 +20,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
         "y": 0
@@ -32,7 +32,7 @@
           "legendFormat": "{{service}}"
         }
       ],
-      "title": "Request rate",
+      "title": "Request rate by service",
       "type": "timeseries"
     },
     {
@@ -47,7 +47,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
         "y": 0
@@ -59,7 +59,115 @@
           "legendFormat": "{{service}} p95"
         }
       ],
-      "title": "p95 latency",
+      "title": "p95 latency by service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum(http_requests_total) by (service, path, status)",
+          "legendFormat": "{{service}} {{path}} {{status}}"
+        }
+      ],
+      "title": "Endpoint totals by status",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=\"500\"}[5m])) by (service) / clamp_min(sum(rate(http_requests_total[5m])) by (service), 1)",
+          "legendFormat": "{{service}} error ratio"
+        }
+      ],
+      "title": "5xx error ratio by service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "business_events_total",
+          "legendFormat": "{{event}} {{outcome}}"
+        }
+      ],
+      "title": "Business events",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "node_process_memory_bytes",
+          "legendFormat": "{{service}} {{type}}"
+        }
+      ],
+      "title": "Sample service memory",
       "type": "timeseries"
     }
   ],
@@ -67,7 +175,8 @@
   "schemaVersion": 39,
   "tags": [
     "observability",
-    "free"
+    "free",
+    "endpoint-metrics"
   ],
   "templating": {
     "list": []
@@ -79,6 +188,6 @@
   "timezone": "browser",
   "title": "Application Overview",
   "uid": "app-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

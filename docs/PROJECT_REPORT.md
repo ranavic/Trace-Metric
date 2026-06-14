@@ -12,8 +12,8 @@ Modern applications can fail silently when teams lack centralized visibility int
 - Alerting with Alertmanager.
 - Distributed tracing with OpenTelemetry and Jaeger.
 - Unified custom webapp for an observability overview.
-- Native traffic simulation for healthy, slow, failing, and mixed traffic.
-- Reliability explanation with SLO and error budget views.
+- Native traffic simulation for healthy, slow, failing, login, checkout, payment, database, outage, recovery, and mixed traffic.
+- Endpoint-level metrics, business counters, service inventory, deployment context, and calculated SLO/error budget views.
 
 ## Architecture
 
@@ -44,7 +44,7 @@ flowchart LR
 | Component | Role |
 | --- | --- |
 | Custom webapp | Polished operational dashboard, traffic generator, and learning interface |
-| Sample service | Demo `checkout-api` application that emits metrics, logs, incidents, and traces |
+| Sample service | Demo `checkout-api` application that emits endpoint metrics, logs, incidents, SLO data, deployment context, business counters, and traces |
 | Prometheus | Scrapes and stores metrics |
 | Grafana | Visualizes Prometheus metrics |
 | Alertmanager | Receives and groups alerts |
@@ -68,9 +68,33 @@ The frontend is implemented as a responsive single-page dashboard with working t
 - Runbook
 - Architecture
 
-The webapp includes a native traffic generator with request amount and traffic type controls. Supported traffic types are `Mixed traffic`, `Healthy only`, `Slow latency`, and `Failures`.
+The webapp includes a native traffic generator with request amount and traffic type controls. Supported traffic types are:
 
-The frontend imports live data from Prometheus, Alertmanager, Elasticsearch-backed service APIs, and the sample service health API. It renders native status cards, request charts, log rows, active alerts, incident history, tracing status, and service signal status.
+- `Mixed traffic`
+- `Healthy only`
+- `Slow latency`
+- `Failures`
+- `Login journey`
+- `Checkout journey`
+- `Payment failures`
+- `Database slowness`
+- `Outage mode`
+- `Recovery mode`
+
+The frontend imports live data from Prometheus, Alertmanager, Elasticsearch-backed service APIs, and the sample service APIs. It renders native status cards, request charts, log rows, active alerts, incident history, trace summaries, endpoint tables, business counters, service inventory, SLO calculations, and deployment health context.
+
+The tabs now have distinct operational responsibilities:
+
+- **Overview**: total requests, p95 latency, errors, active alerts, target health, service version, log volume, and runtime memory.
+- **Live metrics**: `200`, `400`, and `500` response counts, request rate, p95 latency, endpoint breakdown, business counters, and native request trend chart.
+- **Logs**: total logs, warning logs, error logs, slow logs, recent JSON request rows, and Kibana filter examples.
+- **Alerts**: alert rule state, active Alertmanager feed, generated incident history, severity, and runbook hints.
+- **Tracing**: OpenTelemetry to Jaeger flow plus slow operation/dependency summaries.
+- **Services**: service owner, status, version, dependencies, and signal coverage.
+- **SLO**: availability, latency compliance, error budget remaining, burn rate, error rate, and measured request volume.
+- **Deployments**: release timeline, status, and impact explanation.
+- **Runbook**: investigation order from symptom to metrics, logs, traces, SLO, and deployment decision.
+- **Architecture**: metrics, logs, traces, scenario simulation, and runbook data flow.
 
 ## Alert Demonstration
 
@@ -82,11 +106,11 @@ In the verified run, `HighLatencyP95` reached firing state and appeared as an ac
 
 The sample service sent JSON logs to Logstash. Logstash wrote them into Elasticsearch under `app-logs-*`, and Kibana Discover displayed the indexed documents.
 
-Each backend request writes one JSON log line containing fields such as `service`, `status`, `path`, `mode`, `duration_ms`, and `timestamp`. The Docker Compose setup does not define a persistent Elasticsearch volume, so logs are suitable for local demo sessions rather than long-term retention.
+Each backend request writes one JSON log line containing fields such as `service`, `status`, `path`, `method`, `mode`, `severity`, `duration_ms`, `trace_id`, `dependency`, and `timestamp`. The Docker Compose setup does not define a persistent Elasticsearch volume, so logs are suitable for local demo sessions rather than long-term retention.
 
 ## Tracing Demonstration
 
-The sample service uses OpenTelemetry packages inside the Node app. Each request creates a span named for the route, such as `HTTP /slow`, `HTTP /fail`, or `HTTP /health`.
+The sample service uses OpenTelemetry packages inside the Node app. Each request creates a span named for the route, such as `GET /api/products`, `POST /api/checkout`, `POST /api/payment/charge`, `GET /slow`, or `GET /fail`.
 
 The service exports spans to Jaeger through OTLP HTTP using:
 
@@ -98,13 +122,16 @@ Jaeger displays traces for the `checkout-api` service at `http://localhost:16686
 
 ## SLO And Error Budget Demonstration
 
-The SLO tab explains the reliability targets used by the demo:
+The SLO tab calculates reliability values from the generated request data:
 
-- `99.9%` availability target
-- `500 ms` p95 latency limit
-- `< 1%` 5xx target
+- availability percentage
+- percentage of requests under the `500 ms` latency target
+- error budget remaining
+- burn rate
+- 5xx error rate
+- total measured request volume
 
-These targets connect user-facing reliability expectations to backend measurements. The alert rules demonstrate what happens when latency or error rate starts burning the error budget.
+These values connect user-facing reliability expectations to backend measurements. The alert rules demonstrate what happens when latency or error rate starts burning the error budget.
 
 ## Free Stack
 
@@ -121,7 +148,12 @@ All project components are free to run locally:
 
 ## Completed Implementation
 
-- Native frontend traffic generator with request amount and traffic type controls.
+- Native frontend traffic generator with request amount and scenario-based traffic type controls.
+- Endpoint-level metrics by service, path, method, status, request count, error rate, and average latency.
+- Business counters for logins, checkouts, payments, payment failures, and abandoned carts.
+- Calculated SLO cards for availability, latency compliance, error budget, burn rate, error rate, and measured requests.
+- Service inventory for `checkout-api`, `auth-service`, `payment-service`, and `inventory-service`.
+- Deployment health timeline for recent release context.
 - Real log summary cards powered by Elasticsearch.
 - Real incident history generated by slow and failing traffic.
 - Native frontend chart rendered from Prometheus range data.

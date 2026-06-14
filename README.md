@@ -23,6 +23,11 @@ The sample service exposes:
 - `http://localhost:3001/metrics`
 - `http://localhost:3001/slow`
 - `http://localhost:3001/fail`
+- `http://localhost:3001/api/endpoint-metrics`
+- `http://localhost:3001/api/services`
+- `http://localhost:3001/api/slo`
+- `http://localhost:3001/api/deployments`
+- `http://localhost:3001/api/trace-summary`
 
 ## Run The Custom Webapp
 
@@ -30,7 +35,17 @@ Open `index.html` in a browser. No install step is required.
 
 The frontend includes responsive navigation, the custom burger image icon, and working tabs for overview, metrics, logs, alerts, tracing, services, SLOs, deployments, runbooks, and architecture.
 
-It also includes a native traffic generator form. Choose the number of requests and the traffic type: `Mixed traffic`, `Healthy only`, `Slow latency`, or `Failures`. Generated traffic updates Prometheus metrics, Logstash/Elasticsearch logs, incident history, and Jaeger traces.
+It also includes a native traffic generator form. Choose the number of requests and the traffic type: `Mixed traffic`, `Healthy only`, `Slow latency`, `Failures`, `Login journey`, `Checkout journey`, `Payment failures`, `Database slowness`, `Outage mode`, or `Recovery mode`. Generated traffic updates Prometheus metrics, Logstash/Elasticsearch logs, incident history, SLO calculations, deployment context, service health, business counters, and Jaeger traces.
+
+Each dashboard tab now has its own operational focus:
+
+- Metrics: endpoint-by-endpoint traffic, 4xx/5xx split, average latency, and business counters.
+- Logs: severity, warning/error counts, slow logs, and Kibana filters.
+- Alerts: active Alertmanager alerts and synthetic incident history with runbook hints.
+- Tracing: operation-level trace summaries and dependency context.
+- Services: observed service inventory with owner, status, version, dependencies, and signals.
+- SLO: availability, latency compliance, error budget, burn rate, and measured request volume.
+- Deployments: release timeline and impact context.
 
 ## Run The Observability Stack
 

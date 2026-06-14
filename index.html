@@ -79,6 +79,12 @@
                 <option value="healthy">Healthy only</option>
                 <option value="slow">Slow latency</option>
                 <option value="fail">Failures</option>
+                <option value="login">Login journey</option>
+                <option value="checkout">Checkout journey</option>
+                <option value="payment">Payment failures</option>
+                <option value="database">Database slowness</option>
+                <option value="outage">Outage mode</option>
+                <option value="recovery">Recovery mode</option>
               </select>
               <div class="traffic-select" data-traffic-select>
                 <button class="traffic-select-button" type="button" aria-haspopup="listbox" aria-expanded="false" data-traffic-select-button>
@@ -89,6 +95,12 @@
                   <button type="button" role="option" aria-selected="false" data-traffic-option value="healthy">Healthy only</button>
                   <button type="button" role="option" aria-selected="false" data-traffic-option value="slow">Slow latency</button>
                   <button type="button" role="option" aria-selected="false" data-traffic-option value="fail">Failures</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="login">Login journey</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="checkout">Checkout journey</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="payment">Payment failures</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="database">Database slowness</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="outage">Outage mode</button>
+                  <button type="button" role="option" aria-selected="false" data-traffic-option value="recovery">Recovery mode</button>
                 </div>
               </div>
             </label>
@@ -207,16 +219,16 @@
                 <strong data-target-health>checking</strong>
               </div>
               <div>
-                <span>Last scrape source</span>
-                <strong>checkout-api</strong>
+                <span>Current version</span>
+                <strong data-service-version>local</strong>
               </div>
               <div>
                 <span>Log index</span>
                 <strong data-log-total>app-logs-*</strong>
               </div>
               <div>
-                <span>Alert route</span>
-                <strong>local-console</strong>
+                <span>Runtime memory</span>
+                <strong data-runtime-memory>--</strong>
               </div>
             </div>
           </article>
@@ -232,10 +244,33 @@
           </div>
           <div class="metric-board">
             <article class="tile yellow"><h2>200 responses</h2><strong class="metric-value" data-ok-count>--</strong><small>http_requests_total status=200</small></article>
+            <article class="tile blue"><h2>400 responses</h2><strong class="metric-value" data-client-error-count>--</strong><small>client-side/API validation errors</small></article>
             <article class="tile pink"><h2>500 responses</h2><strong class="metric-value" data-error-count-copy>--</strong><small>http_requests_total status=500</small></article>
             <article class="tile green"><h2>Request rate</h2><strong class="metric-value" data-request-rate>--</strong><small>sum(rate(http_requests_total[1m]))</small></article>
             <article class="tile blue"><h2>p95 latency</h2><strong class="metric-value" data-p95-latency-copy>--</strong><small>histogram_quantile query</small></article>
           </div>
+          <article class="panel">
+            <div class="section-title">
+              <h2>Endpoint breakdown</h2>
+              <span>Path, service, traffic, errors, latency</span>
+            </div>
+            <div class="service-table endpoint-table" data-endpoint-table>
+              <div class="service-row"><span>Waiting for backend data</span><span>Generate traffic</span><span>--</span><span>--</span><span>--</span></div>
+            </div>
+          </article>
+          <article class="native-chart-card">
+            <div class="section-title">
+              <h2>Business counters</h2>
+              <span>User journey signals</span>
+            </div>
+            <div class="business-grid" data-business-metrics>
+              <div><strong>--</strong><span>Logins</span></div>
+              <div><strong>--</strong><span>Checkouts</span></div>
+              <div><strong>--</strong><span>Payments</span></div>
+              <div><strong>--</strong><span>Payment failures</span></div>
+              <div><strong>--</strong><span>Abandoned carts</span></div>
+            </div>
+          </article>
           <div class="native-chart-card">
             <div class="section-title">
               <h2>Native request chart</h2>
@@ -263,7 +298,12 @@
             </div>
           </div>
           <pre class="query-box compact-query"><code>sum(rate(http_requests_total[1m])) by (service)
-histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m])))</code></pre>
+histogram_quantile(
+  0.95,
+  sum by (le, service) (
+    rate(http_request_duration_seconds_bucket[5m])
+  )
+)</code></pre>
         </section>
 
         <section class="view" id="logs" data-view="logs">
@@ -278,6 +318,7 @@ histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_second
             <div class="log-stats">
               <div><strong data-log-total-copy>--</strong><span>Total logs</span></div>
               <div><strong data-log-errors>--</strong><span>500 logs</span></div>
+              <div><strong data-log-warnings>--</strong><span>Warning logs</span></div>
               <div><strong data-log-slow>--</strong><span>Slow logs</span></div>
             </div>
             <div class="log-stream" data-log-stream>
@@ -288,6 +329,7 @@ histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_second
             <div class="panel">
               <h2>Kibana filter ideas</h2>
               <p><code>service : "checkout-api"</code></p>
+              <p><code>severity : "error"</code></p>
               <p><code>status &gt;= 500</code></p>
               <p><code>duration_ms &gt; 500</code></p>
             </div>
@@ -341,53 +383,68 @@ histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_second
             <h2>Tracing status</h2>
             <p data-trace-status>Every generated request now creates an OpenTelemetry span and exports it to Jaeger through OTLP HTTP.</p>
           </div>
+          <article class="panel">
+            <div class="section-title">
+              <h2>Slow operations</h2>
+              <span>Operation, service, average duration, dependency</span>
+            </div>
+            <div class="trace-summary" data-trace-summary>
+              <p>Generate traffic to populate operation-level trace summaries.</p>
+            </div>
+          </article>
         </section>
 
         <section class="view" id="services" data-view="services">
           <div class="tool-header">
             <div>
               <h2>Services</h2>
-              <p>The real running demo service is checkout-api. Other rows describe where this project can expand.</p>
+              <p>checkout-api is the real container. The other services are simulated through generated traffic so the dashboard can show multi-service behavior.</p>
             </div>
             <a href="http://localhost:3001/health" target="_blank" rel="noreferrer">Open service health</a>
           </div>
-          <div class="service-table">
-            <div class="service-row head"><span>Service</span><span>Status</span><span>Signal</span><span>Tool</span></div>
-            <div class="service-row"><span>checkout-api</span><strong class="warn" data-service-status>Checking</strong><span data-service-signals>Metrics + logs + traces</span><span>Prometheus, Kibana, Jaeger</span></div>
-            <div class="service-row"><span>prometheus</span><strong class="good">Running</strong><span>Scrape target</span><span>Prometheus UI</span></div>
-            <div class="service-row"><span>grafana</span><strong class="good">Running</strong><span>Dashboard panels</span><span>Grafana</span></div>
-            <div class="service-row"><span>logstash</span><strong class="good">Running</strong><span>TCP JSON pipeline</span><span>ELK</span></div>
+          <div class="service-table service-wide" data-service-table>
+            <div class="service-row service-head"><span>Service</span><span>Status</span><span>Version</span><span>Dependencies</span><span>Signals</span></div>
+            <div class="service-row service-wide-row"><span>checkout-api</span><strong class="warn" data-service-status>Checking</strong><span>local</span><span>payment, inventory</span><span data-service-signals>Metrics + logs + traces</span></div>
           </div>
         </section>
 
         <section class="view" id="slo" data-view="slo">
           <div class="slo-grid">
-            <div><strong>99.9%</strong><span>Availability target</span></div>
-            <div><strong>500 ms</strong><span>p95 latency limit</span></div>
-            <div><strong>&lt; 1%</strong><span>5xx target</span></div>
+            <div><strong data-slo-availability>--</strong><span>Availability now</span></div>
+            <div><strong data-slo-latency>--</strong><span>Requests under 500 ms</span></div>
+            <div><strong data-slo-error-budget>--</strong><span>Error budget left</span></div>
+            <div><strong data-slo-burn>--</strong><span>Burn rate</span></div>
+            <div><strong data-slo-error-rate>--</strong><span>5xx error rate</span></div>
+            <div><strong data-slo-total>--</strong><span>Requests measured</span></div>
           </div>
           <div class="panel">
             <h2>SLO meaning</h2>
-            <p>SLOs turn monitoring into a reliability promise. The alert rules are useful because they map backend symptoms to a user-facing reliability budget.</p>
+            <p>SLOs turn monitoring into a reliability promise. Generate outage or slow traffic to watch availability, latency compliance, and error budget move.</p>
           </div>
         </section>
 
         <section class="view" id="deployments" data-view="deployments">
-          <div class="service-table compact">
-            <div class="service-row head"><span>Event</span><span>Service</span><span>Impact</span><span>Action</span></div>
-            <div class="service-row"><span>Traffic spike</span><span>checkout-api</span><strong class="warn">Watch latency</strong><span>Open Grafana</span></div>
-            <div class="service-row"><span>Failure simulation</span><span>/fail endpoint</span><strong class="bad">Expected 500s</strong><span>Open Kibana</span></div>
-            <div class="service-row"><span>Slow simulation</span><span>/slow endpoint</span><strong class="bad">Expected alert</strong><span>Open Alertmanager</span></div>
+          <div class="service-table deployment-table" data-deployment-table>
+            <div class="service-row deployment-head"><span>Version</span><span>Service</span><span>Status</span><span>Impact</span><span>Time</span></div>
+            <div class="service-row deployment-row"><span>local</span><span>checkout-api</span><strong class="warn">Checking</strong><span>Waiting for backend data</span><span>now</span></div>
           </div>
+          <article class="panel">
+            <div class="section-title">
+              <h2>Change check</h2>
+              <span>Before and after deployment</span>
+            </div>
+            <p>Use payment, database, outage, and recovery traffic to explain how a release can change error rate, latency, logs, alerts, and SLO health.</p>
+          </article>
         </section>
 
         <section class="view" id="runbook" data-view="runbook">
           <ol class="steps">
-            <li><strong>Generate traffic:</strong> run <code>.\scripts\generate-traffic.ps1 -Requests 120</code>.</li>
-            <li><strong>Confirm metrics:</strong> open Grafana and Prometheus targets.</li>
-            <li><strong>Confirm alert:</strong> wait 60 seconds, then open Alertmanager.</li>
-            <li><strong>Confirm logs:</strong> open Kibana Discover and select <code>app-logs-*</code>.</li>
-            <li><strong>Explain the flow:</strong> metrics go to Prometheus, logs go to ELK, alerts go to Alertmanager.</li>
+            <li><strong>Start with symptom:</strong> generate <code>payment</code>, <code>database</code>, or <code>outage</code> traffic from the simulator.</li>
+            <li><strong>Check metrics:</strong> open the metrics tab and compare endpoints by errors, traffic, and latency.</li>
+            <li><strong>Check logs:</strong> filter by <code>severity : "error"</code>, <code>status &gt;= 500</code>, or <code>duration_ms &gt; 500</code>.</li>
+            <li><strong>Check traces:</strong> open Jaeger for the slow operation and inspect the listed dependency.</li>
+            <li><strong>Check SLO:</strong> confirm whether availability, latency compliance, or burn rate moved.</li>
+            <li><strong>Check deployments:</strong> decide whether recent release impact matches the error or latency pattern.</li>
           </ol>
         </section>
 
@@ -397,6 +454,9 @@ histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_second
           </div>
           <div class="arch-flow second">
             <span>checkout-api</span><b>JSON logs</b><span>Logstash</span><b>index</b><span>Elasticsearch</span><b>search</b><span>Kibana</span>
+          </div>
+          <div class="arch-flow third">
+            <span>Traffic simulator</span><b>scenarios</b><span>auth/payment/inventory</span><b>SLO math</b><span>Trace & Metrics UI</span><b>decision</b><span>Runbook</span>
           </div>
         </section>
       </main>
